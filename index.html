@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ISF Shader Playground</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <header>
+        <h1>
+            ✨ ISF Shader Playground
+        </h1>
+        <div class="header-actions">
+            <div class="info-pill">
+                Available ISF Uniforms: TIME, RENDERSIZE
+            </div>
+            <button id="btn-export" class="btn-action btn-secondary">
+                💾 Export ISF
+            </button>
+            <button id="btn-copy" class="btn-action">
+                📋 Copy ISF
+            </button>
+        </div>
+    </header>
+
+    <main>
+        <div class="preview-wrapper">
+            <div class="preview-bar">
+                <span>Live Preview</span>
+                <span id="fps-counter" class="fps-counter">60 FPS</span>
+            </div>
+            <div id="canvas-container">
+                <canvas id="glcanvas"></canvas>
+                <div id="error-overlay"></div>
+            </div>
+        </div>
+    </main>
+
+    <script type="module" src="script.js"></script>
+</body>
+</html>
