@@ -74,65 +74,23 @@ function buildControls() {
         shaderDescription.textContent = model.description;
     }
 
-    // Group inputs by type for cleaner layout
-    const floatInputs = [];
-    const colorInputs = [];
-    const boolInputs = [];
-    const eventInputs = [];
-    const longInputs = [];
-    const point2DInputs = [];
-    const otherInputs = [];
-
-    for (const input of model.inputs) {
-        switch (input.TYPE) {
-            case 'float': floatInputs.push(input); break;
-            case 'color': colorInputs.push(input); break;
-            case 'bool': boolInputs.push(input); break;
-            case 'event': eventInputs.push(input); break;
-            case 'long': longInputs.push(input); break;
-            case 'point2D': point2DInputs.push(input); break;
-            default:
-                if (input.TYPE !== 'image') otherInputs.push(input);
-                break;
-        }
-    }
-
     controlsContainer.innerHTML = '';
 
-    if (floatInputs.length) {
-        controlsContainer.appendChild(createGroup('Parameters', floatInputs, createFloatControl));
-    }
-    if (colorInputs.length) {
-        controlsContainer.appendChild(createGroup('Colors', colorInputs, createColorControl));
-    }
-    if (boolInputs.length) {
-        controlsContainer.appendChild(createGroup('Toggles', boolInputs, createBoolControl));
-    }
-    if (eventInputs.length) {
-        controlsContainer.appendChild(createGroup('Events', eventInputs, createEventControl));
-    }
-    if (longInputs.length) {
-        controlsContainer.appendChild(createGroup('Options', longInputs, createLongControl));
-    }
-    if (point2DInputs.length) {
-        controlsContainer.appendChild(createGroup('Points', point2DInputs, createPoint2DControl));
-    }
-}
+    const builders = {
+        'float': createFloatControl,
+        'color': createColorControl,
+        'bool': createBoolControl,
+        'event': createEventControl,
+        'long': createLongControl,
+        'point2D': createPoint2DControl
+    };
 
-function createGroup(title, inputs, builder) {
-    const group = document.createElement('div');
-    group.className = 'control-group';
-
-    const label = document.createElement('div');
-    label.className = 'control-group-label';
-    label.textContent = title;
-    group.appendChild(label);
-
-    for (const input of inputs) {
-        group.appendChild(builder(input));
+    for (const input of model.inputs) {
+        const builder = builders[input.TYPE];
+        if (builder) {
+            controlsContainer.appendChild(builder(input));
+        }
     }
-
-    return group;
 }
 
 // ============================================================

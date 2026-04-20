@@ -1,77 +1,122 @@
 /*{
-    "DESCRIPTION": "Fractal 29_gaz: A recursive KIFS fractal tunnel using spherical inversion.",
-    "CREDIT": "gaz (converted by Gemini) https://www.shadertoy.com/view/wtGfRy",
-    "ISFVSN": "2",
-    "CATEGORIES": [
-        "Fractal", "Raymarching", "Infinite"
-    ],
+    "CREDIT": "20Block Radius",
+    "DESCRIPTION": "Dual interacting melt fields with independent size control",
+    "CATEGORIES": [ "generator" ],
     "INPUTS": [
-        {
-            "NAME": "fractalSpeed",
-            "TYPE": "float",
-            "MIN": 0.0,
-            "MAX": 1.0,
-            "DEFAULT": 0.3
-        },
-        {
-            "NAME": "glowIntensity",
-            "TYPE": "float",
-            "MIN": 0.0,
-            "MAX": 0.0002,
-            "DEFAULT": 0.00005
-        }
+        { "NAME": "noiseIntensity", "TYPE": "float", "DEFAULT": 6.0, "MIN": 0.0, "MAX": 10.0 },
+        { "NAME": "noiseScaleX", "TYPE": "float", "DEFAULT": 5.5, "MIN": 0.1, "MAX": 10.0 },
+        { "NAME": "noiseScaleY", "TYPE": "float", "DEFAULT": 3.5, "MIN": 0.1, "MAX": 10.0 },
+        { "NAME": "wavePhase", "TYPE": "float", "DEFAULT": 0.2, "MIN": 0.0, "MAX": 1.0 },
+        { "NAME": "rotationAmount", "TYPE": "float", "DEFAULT": 0.0, "MIN": -3.14, "MAX": 3.14 },
+        { "NAME": "colorTint", "TYPE": "color", "DEFAULT": [1,1,1,1] },
+        { "NAME": "deformAmount", "TYPE": "float", "DEFAULT": 0.2, "MIN": 0.0, "MAX": 2.0 },
+
+        { "NAME": "center",  "TYPE": "point2D", "DEFAULT": [0.5,0.5], "MIN":[0,0], "MAX":[1,1] },
+        { "NAME": "center2", "TYPE": "point2D", "DEFAULT": [0.65,0.65], "MIN":[0,0], "MAX":[1,1] },
+
+        { "NAME": "size1", "TYPE": "float", "DEFAULT": 0.5, "MIN": 0.05, "MAX": 1.5 },
+        { "NAME": "size2", "TYPE": "float", "DEFAULT": 0.5, "MIN": 0.05, "MAX": 1.5 },
+
+        { "NAME": "interactionStrength", "TYPE": "float", "DEFAULT": 1.0, "MIN": 0.0, "MAX": 3.0 }
     ]
 }*/
 
-#ifdef GL_ES
-precision highp float;
-#endif
+#define PI 3.1415926535
+#define TWO_PI (PI * 2.0)
 
-// Rodrigues' Rotation Formula macro: rotates vector 'p' around axis 'a' by 'r' radians
-#define R(p,a,r)mix(a*dot(p,a),p,cos(r))+sin(r)*cross(p,a)
+float map(float x, float a, float b, float c, float d){
+    return (x-a)*(d-c)/(b-a)+c;
+}
 
-void main() {
-    vec4 O = vec4(0.0);
-    vec2 C = gl_FragCoord.xy;
-    vec3 p, r = vec3(RENDERSIZE.xy, 0.0);
-    
-    // Normalize ray direction from pixel coordinates
-    vec3 d = normalize(vec3((C - 0.5 * r.xy) / r.y, 1.0));  
-    
-    // Main Raymarching Loop
-    float g = 0.0; // Total distance traveled along the ray
-    float e, s;    // 'e' is the step size/scale, 's' is the accumulator for fractal scaling
-    
-    for(float i = 0.0; i < 99.0; i++) {
-        p = g * d;           // Current position in 3D space
-        p.z += TIME * fractalSpeed; // Move camera forward along Z-axis
-        
-        // Rotate the entire world space to create variety
-        p = R(p, normalize(vec3(1, 2, 3)), 0.5);   
-        
-        s = 2.5;
-        // Modulo repetition to make the fractal infinite in all directions
-        p = abs(mod(p - 1.0, 2.0) - 1.0) - 1.0;
-        
-        // Fractal Recursive Loop (The "Folding")
-        // 
-        for(int j = 0; j < 10; j++) {
-            p = 1.0 - abs(p - 1.0); // Folding space
-            
-            // Spherical Inversion: The heart of the "Apollonian" fractal look
-            // 
-            e = -1.8 / dot(p, p); 
-            s *= e;                 // Track the total scale multiplier
-            p = p * e - 0.7;        // Apply scale and offset
-        }
-        
-        // Distance estimation step
-        e = abs(p.z) / s + 0.001; 
-        g += e;
-        
-        // Coloring logic based on scale 's' and distance 'dot(p,p)'
-        O.xyz += glowIntensity * abs(cos(vec3(3, 2, 1) + log(abs(s * 9.0)))) / dot(p, p) / e;
+float ease(float p, float g){
+    return (p < 0.5) ? 0.5*pow(2.0*p,g) : 1.0 - 0.5*pow(2.0*(1.0-p),g);
+}
+
+float hash(vec2 p){
+    vec3 p3 = fract(vec3(p.xyx)*0.13);
+    p3 += dot(p3,p3.yzx+3.333);
+    return fract((p3.x+p3.y)*p3.z);
+}
+
+float noise(vec2 x){
+    vec2 i=floor(x), f=fract(x);
+    float a=hash(i), b=hash(i+vec2(1,0));
+    float c=hash(i+vec2(0,1)), d=hash(i+vec2(1,1));
+    vec2 u=f*f*(3.0-2.0*f);
+    return mix(a,b,u.x)+(c-a)*u.y*(1.0-u.x)+(d-b)*u.x*u.y;
+}
+
+float fbm(vec2 x){
+    float v=0.0, a=0.5;
+    mat2 rot=mat2(cos(0.5),sin(0.5),-sin(0.5),cos(0.5));
+    for(int i=0;i<3;i++){
+        v+=a*noise(x);
+        x=rot*x*2.0+100.0;
+        a*=0.5;
     }
-    
-    gl_FragColor = vec4(O.xyz, 1.0);
+    return v;
+}
+
+float distC(vec2 uv, vec2 c){
+    vec2 p=uv-c;
+    p.x*=RENDERSIZE.x/RENDERSIZE.y;
+    return length(p);
+}
+
+vec2 rotateUV(vec2 uv, float a, vec2 c){
+    uv-=c;
+    uv=mat2(cos(a),-sin(a),sin(a),cos(a))*uv;
+    uv+=c;
+    return uv;
+}
+
+// --- SIZE-AWARE INTERACTION ---
+float interactingWave(vec2 uv, float t){
+
+    float d1 = distC(uv, center) / size1;
+    float d2 = distC(uv, center2) / size2;
+
+    vec2 ns = vec2(noiseScaleX, noiseScaleY);
+
+    float n1 = fbm(uv * ns + t*0.3);
+    float n2 = fbm((uv+5.0) * ns + t*0.35);
+
+    float offset1 = n1 * noiseIntensity * smoothstep(0.32,0.22,d1);
+    float offset2 = n2 * noiseIntensity * smoothstep(0.32,0.22,d2);
+
+    float wave1 = smoothstep(0.8,0.001,d1)*18.0;
+    float wave2 = smoothstep(0.8,0.001,d2)*18.0;
+
+    float combined = offset1 + offset2 + wave1 + wave2;
+
+    combined += interactionStrength * (offset1 * offset2);
+
+    float w = sin(TWO_PI * (t + combined + wavePhase));
+    return map(w,-1.0,1.0,0.0,1.0);
+}
+
+void main(){
+    vec2 uv = gl_FragCoord.xy / RENDERSIZE.xy;
+
+    uv += deformAmount * 0.02 * vec2(
+        sin(uv.y*10.0+TIME),
+        cos(uv.x*10.0+TIME)
+    );
+
+    vec2 mid = mix(center, center2, 0.5);
+    uv = rotateUV(uv, rotationAmount, mid);
+
+    float r = interactingWave(uv, TIME);
+    float g = interactingWave(uv + 0.01, TIME);
+    float b = interactingWave(uv + 0.02, TIME);
+
+    vec3 col = vec3(r,g,b) * colorTint.rgb;
+
+    float v1 = distC(uv, center) / size1;
+    float v2 = distC(uv, center2) / size2;
+    float v = min(v1, v2);
+
+    float fade = 1.0 - min(ease(v+0.2, 20.0),1.0);
+
+    gl_FragColor = vec4(col * fade, 1.0);
 }
