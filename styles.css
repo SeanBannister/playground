@@ -129,11 +129,11 @@ html {
     transform-origin: center;
 }
 
-body.sidebar-open .sidebar-toggle {
+.isf-playground-root.sidebar-open .sidebar-toggle {
     left: calc(var(--sidebar-width) + 16px);
 }
 
-body.sidebar-open .sidebar-toggle .hamburger-line.top {
+.isf-playground-root.sidebar-open .sidebar-toggle .hamburger-line.top {
     transform: translateX(3px) rotate(45deg);
     x1: 6;
     y1: 12;
@@ -141,12 +141,12 @@ body.sidebar-open .sidebar-toggle .hamburger-line.top {
     y2: 12;
 }
 
-body.sidebar-open .sidebar-toggle .hamburger-line.middle {
+.isf-playground-root.sidebar-open .sidebar-toggle .hamburger-line.middle {
     opacity: 0;
     transform: translateX(-8px);
 }
 
-body.sidebar-open .sidebar-toggle .hamburger-line.bottom {
+.isf-playground-root.sidebar-open .sidebar-toggle .hamburger-line.bottom {
     transform: translateX(3px) rotate(-45deg);
     x1: 6;
     y1: 12;
@@ -177,7 +177,7 @@ body.sidebar-open .sidebar-toggle .hamburger-line.bottom {
     overflow: hidden;
 }
 
-body.sidebar-open .sidebar {
+.isf-playground-root.sidebar-open .sidebar {
     transform: translateX(0);
 }
 
@@ -757,7 +757,7 @@ body.sidebar-open .sidebar {
         --sidebar-width: 100vw;
     }
 
-    body.sidebar-open .sidebar-toggle {
+    .isf-playground-root.sidebar-open .sidebar-toggle {
         left: calc(100vw - var(--toggle-size) - 16px);
     }
 }

@@ -1,53 +1,30 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ISF Shader Playground</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>ISF Shader Playground - Embedded Demo</title>
 </head>
+
 <body>
 
-    <!-- Hamburger / Arrow toggle button -->
-    <button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle sidebar">
-        <svg id="toggle-icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <line class="hamburger-line top" x1="3" y1="6" x2="21" y2="6" />
-            <line class="hamburger-line middle" x1="3" y1="12" x2="21" y2="12" />
-            <line class="hamburger-line bottom" x1="3" y1="18" x2="21" y2="18" />
-        </svg>
-    </button>
+    <!-- We no longer need all the boilerplate HTML here, the ISF playground script injects it! -->
 
-    <!-- Sidebar panel -->
-    <aside id="sidebar" class="sidebar">
-        <div class="sidebar-header">
-            <h1 class="sidebar-title">✨ ISF Playground</h1>
-            <span id="fps-counter" class="fps-badge">60 FPS</span>
-        </div>
+    <script type="module">
+        import { isfPlayground } from './script.js';
 
-        <div class="sidebar-description" id="shader-description"></div>
-
-        <div class="sidebar-body" id="controls-container">
-            <!-- Dynamic controls injected here by script.js -->
-        </div>
-
-        <div class="sidebar-footer">
-            <button id="btn-export" class="btn-action btn-secondary">
-                <svg viewBox="0 0 20 20" width="16" height="16" fill="currentColor"><path d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"/></svg>
-                Export .fs
-            </button>
-            <button id="btn-copy" class="btn-action">
-                <svg viewBox="0 0 20 20" width="16" height="16" fill="currentColor"><path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z"/><path d="M6 3a3 3 0 00-3 3v8a3 3 0 003 3h4a3 3 0 003-3V6a3 3 0 00-3-3H6z"/><path d="M14 7a1 1 0 00-1 1v6a1 1 0 001 0h.5A2.5 2.5 0 0017 11.5v-2A2.5 2.5 0 0014.5 7H14z"/></svg>
-                Copy ISF
-            </button>
-        </div>
-    </aside>
-
-    <!-- Fullscreen canvas -->
-    <div id="canvas-container">
-        <canvas id="glcanvas"></canvas>
-        <div id="error-overlay"></div>
-    </div>
-
-    <script type="module" src="script.js"></script>
+        // Fetch our shader and instantiate the playground on the body
+        fetch('shader.fs')
+            .then(res => {
+                if (!res.ok) throw new Error("Failed to load shader.fs");
+                return res.text();
+            })
+            .then(shaderCode => {
+                isfPlayground(shaderCode);
+            })
+            .catch(err => console.error("Error loading shader:", err));
+    </script>
 </body>
+
 </html>
