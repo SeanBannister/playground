@@ -3,18 +3,31 @@ import { flashButton } from './helpers.js';
 import { createPlaygroundDOM, buildControls } from './ui.js';
 
 export function isfPlayground(shaderCode, container = document.body) {
-    // 1. Inject Styles
+    // 1. Generate HTML
+    const root = createPlaygroundDOM();
+    
+    // Hide initially to prevent Flash of Unstyled Content (FOUC)
+    root.style.opacity = '0';
+    root.style.transition = 'opacity 0.3s ease';
+
+    // 2. Inject Styles
     if (!document.getElementById('isf-playground-styles')) {
         const link = document.createElement('link');
         link.id = 'isf-playground-styles';
         link.rel = 'stylesheet';
         const cssUrl = new URL('./styles.css', import.meta.url).href;
+        
+        // Wait for CSS to load before showing UI
+        link.onload = () => { root.style.opacity = '1'; };
+        
         link.href = cssUrl;
         document.head.appendChild(link);
+    } else {
+        // Show immediately if styles are already loaded
+        setTimeout(() => { root.style.opacity = '1'; }, 10);
     }
 
-    // 2. Generate and mount HTML
-    const root = createPlaygroundDOM();
+    // 3. Mount HTML
     container.appendChild(root);
 
     // 3. State Variables
