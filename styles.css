@@ -29,7 +29,7 @@
     --danger: #ef4444;
     --success: #22c55e;
     /* Sizing */
-    --sidebar-width: 340px;
+    --sidebar-width: 400px;
     --toggle-size: 44px;
     --radius-sm: 6px;
     --radius-md: 10px;
@@ -173,7 +173,7 @@ body.sidebar-open .sidebar {
 }
 
 .sidebar-header {
-    padding: 20px 20px 12px;
+    padding: 24px 24px 16px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -204,8 +204,8 @@ body.sidebar-open .sidebar {
 }
 
 .sidebar-description {
-    padding: 12px 20px;
-    font-size: 0.75rem;
+    padding: 16px 24px;
+    font-size: 0.8rem;
     color: var(--text-muted);
     line-height: 1.5;
     border-bottom: 1px solid var(--border-subtle);
@@ -225,7 +225,7 @@ body.sidebar-open .sidebar {
     flex: 1;
     overflow-y: auto;
     overflow-x: hidden;
-    padding: 8px 0;
+    padding: 16px 24px;
     scrollbar-width: thin;
     scrollbar-color: rgba(255,255,255,0.1) transparent;
 }
@@ -283,7 +283,7 @@ body.sidebar-open .sidebar {
    ============================================================ */
 
 .control-row {
-    margin-bottom: 14px;
+    margin-bottom: 22px;
 }
 
 .control-label-row {
@@ -294,20 +294,20 @@ body.sidebar-open .sidebar {
 }
 
 .control-label {
-    font-size: 0.78rem;
+    font-size: 0.85rem;
     font-weight: 500;
     color: var(--text-secondary);
 }
 
 .control-value {
-    font-size: 0.7rem;
+    font-size: 0.8rem;
     font-weight: 600;
     font-family: 'SF Mono', ui-monospace, monospace;
     color: var(--accent-teal);
     background: rgba(45, 212, 191, 0.08);
-    padding: 1px 7px;
+    padding: 3px 9px;
     border-radius: var(--radius-sm);
-    min-width: 42px;
+    min-width: 48px;
     text-align: center;
 }
 
@@ -319,8 +319,8 @@ body.sidebar-open .sidebar {
     -webkit-appearance: none;
     appearance: none;
     width: 100%;
-    height: 6px;
-    border-radius: 3px;
+    height: 8px;
+    border-radius: 4px;
     background: rgba(255, 255, 255, 0.08);
     outline: none;
     cursor: pointer;
@@ -334,8 +334,8 @@ body.sidebar-open .sidebar {
 .range-slider::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
-    width: 16px;
-    height: 16px;
+    width: 20px;
+    height: 20px;
     border-radius: 50%;
     background: var(--accent-teal);
     border: 2px solid var(--bg-panel-solid);
@@ -350,8 +350,8 @@ body.sidebar-open .sidebar {
 }
 
 .range-slider::-moz-range-thumb {
-    width: 16px;
-    height: 16px;
+    width: 20px;
+    height: 20px;
     border-radius: 50%;
     background: var(--accent-teal);
     border: 2px solid var(--bg-panel-solid);
@@ -366,19 +366,19 @@ body.sidebar-open .sidebar {
 .color-control {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 16px;
 }
 
 .color-swatch-wrapper {
     position: relative;
-    width: 36px;
-    height: 36px;
+    width: 46px;
+    height: 46px;
     flex-shrink: 0;
 }
 
 .color-swatch {
-    width: 36px;
-    height: 36px;
+    width: 46px;
+    height: 46px;
     border-radius: 50%;
     border: 2px solid var(--border-subtle);
     cursor: pointer;
@@ -406,20 +406,20 @@ body.sidebar-open .sidebar {
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 8px;
 }
 
 .color-channel-row {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
 }
 
 .color-channel-label {
-    font-size: 0.6rem;
+    font-size: 0.65rem;
     font-weight: 700;
     color: var(--text-muted);
-    width: 10px;
+    width: 12px;
     text-align: center;
 }
 
@@ -427,8 +427,8 @@ body.sidebar-open .sidebar {
     -webkit-appearance: none;
     appearance: none;
     flex: 1;
-    height: 4px;
-    border-radius: 2px;
+    height: 8px;
+    border-radius: 4px;
     background: rgba(255, 255, 255, 0.08);
     outline: none;
     cursor: pointer;
@@ -437,8 +437,8 @@ body.sidebar-open .sidebar {
 .color-channel-slider::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
-    width: 10px;
-    height: 10px;
+    width: 14px;
+    height: 14px;
     border-radius: 50%;
     background: var(--text-primary);
     border: 1.5px solid var(--bg-panel-solid);
@@ -447,8 +447,8 @@ body.sidebar-open .sidebar {
 }
 
 .color-channel-slider::-moz-range-thumb {
-    width: 10px;
-    height: 10px;
+    width: 14px;
+    height: 14px;
     border-radius: 50%;
     background: var(--text-primary);
     border: 1.5px solid var(--bg-panel-solid);
@@ -583,28 +583,28 @@ body.sidebar-open .sidebar {
 .point2d-sliders {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 12px;
 }
 
 .point2d-row {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
 }
 
 .point2d-label {
-    font-size: 0.65rem;
+    font-size: 0.75rem;
     font-weight: 700;
     color: var(--text-muted);
-    width: 10px;
+    width: 14px;
 }
 
 .point2d-slider {
     -webkit-appearance: none;
     appearance: none;
     flex: 1;
-    height: 5px;
-    border-radius: 2.5px;
+    height: 8px;
+    border-radius: 4px;
     background: rgba(255, 255, 255, 0.08);
     outline: none;
     cursor: pointer;
@@ -613,8 +613,8 @@ body.sidebar-open .sidebar {
 .point2d-slider::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
-    width: 12px;
-    height: 12px;
+    width: 16px;
+    height: 16px;
     border-radius: 50%;
     background: var(--accent-purple);
     border: 1.5px solid var(--bg-panel-solid);
@@ -623,8 +623,8 @@ body.sidebar-open .sidebar {
 }
 
 .point2d-slider::-moz-range-thumb {
-    width: 12px;
-    height: 12px;
+    width: 16px;
+    height: 16px;
     border-radius: 50%;
     background: var(--accent-purple);
     border: 1.5px solid var(--bg-panel-solid);
@@ -632,10 +632,10 @@ body.sidebar-open .sidebar {
 }
 
 .point2d-value {
-    font-size: 0.65rem;
+    font-size: 0.75rem;
     font-family: 'SF Mono', ui-monospace, monospace;
     color: var(--accent-purple);
-    width: 36px;
+    width: 42px;
     text-align: right;
 }
 
@@ -644,7 +644,7 @@ body.sidebar-open .sidebar {
    ============================================================ */
 
 .sidebar-footer {
-    padding: 14px 20px;
+    padding: 20px 24px;
     border-top: 1px solid var(--border-subtle);
     display: flex;
     gap: 8px;
@@ -656,13 +656,13 @@ body.sidebar-open .sidebar {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
-    padding: 9px 12px;
+    gap: 8px;
+    padding: 12px 16px;
     border: 1px solid var(--border-subtle);
     border-radius: var(--radius-sm);
     background: var(--bg-control);
     color: var(--text-primary);
-    font-size: 0.78rem;
+    font-size: 0.85rem;
     font-weight: 600;
     font-family: inherit;
     cursor: pointer;
