@@ -29,7 +29,7 @@
     --danger: #ef4444;
     --success: #22c55e;
     /* Sizing */
-    --sidebar-width: 400px;
+    --sidebar-width: 380px;
     --toggle-size: 44px;
     --radius-sm: 6px;
     --radius-md: 10px;
@@ -283,7 +283,7 @@ body.sidebar-open .sidebar {
    ============================================================ */
 
 .control-row {
-    margin-bottom: 22px;
+    margin-bottom: 18px;
 }
 
 .control-label-row {
@@ -294,20 +294,20 @@ body.sidebar-open .sidebar {
 }
 
 .control-label {
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     font-weight: 500;
     color: var(--text-secondary);
 }
 
 .control-value {
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     font-weight: 600;
     font-family: 'SF Mono', ui-monospace, monospace;
     color: var(--accent-teal);
     background: rgba(45, 212, 191, 0.08);
-    padding: 3px 9px;
+    padding: 2px 8px;
     border-radius: var(--radius-sm);
-    min-width: 48px;
+    min-width: 46px;
     text-align: center;
 }
 
@@ -319,7 +319,7 @@ body.sidebar-open .sidebar {
     -webkit-appearance: none;
     appearance: none;
     width: 100%;
-    height: 8px;
+    height: 7px;
     border-radius: 4px;
     background: rgba(255, 255, 255, 0.08);
     outline: none;
@@ -334,8 +334,8 @@ body.sidebar-open .sidebar {
 .range-slider::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
-    width: 20px;
-    height: 20px;
+    width: 18px;
+    height: 18px;
     border-radius: 50%;
     background: var(--accent-teal);
     border: 2px solid var(--bg-panel-solid);
@@ -350,8 +350,8 @@ body.sidebar-open .sidebar {
 }
 
 .range-slider::-moz-range-thumb {
-    width: 20px;
-    height: 20px;
+    width: 18px;
+    height: 18px;
     border-radius: 50%;
     background: var(--accent-teal);
     border: 2px solid var(--bg-panel-solid);
@@ -366,19 +366,19 @@ body.sidebar-open .sidebar {
 .color-control {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 14px;
 }
 
 .color-swatch-wrapper {
     position: relative;
-    width: 46px;
-    height: 46px;
+    width: 42px;
+    height: 42px;
     flex-shrink: 0;
 }
 
 .color-swatch {
-    width: 46px;
-    height: 46px;
+    width: 42px;
+    height: 42px;
     border-radius: 50%;
     border: 2px solid var(--border-subtle);
     cursor: pointer;
@@ -406,7 +406,7 @@ body.sidebar-open .sidebar {
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
 }
 
 .color-channel-row {
@@ -427,8 +427,8 @@ body.sidebar-open .sidebar {
     -webkit-appearance: none;
     appearance: none;
     flex: 1;
-    height: 8px;
-    border-radius: 4px;
+    height: 6px;
+    border-radius: 3px;
     background: rgba(255, 255, 255, 0.08);
     outline: none;
     cursor: pointer;
@@ -437,8 +437,8 @@ body.sidebar-open .sidebar {
 .color-channel-slider::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
-    width: 14px;
-    height: 14px;
+    width: 12px;
+    height: 12px;
     border-radius: 50%;
     background: var(--text-primary);
     border: 1.5px solid var(--bg-panel-solid);
@@ -447,8 +447,8 @@ body.sidebar-open .sidebar {
 }
 
 .color-channel-slider::-moz-range-thumb {
-    width: 14px;
-    height: 14px;
+    width: 12px;
+    height: 12px;
     border-radius: 50%;
     background: var(--text-primary);
     border: 1.5px solid var(--bg-panel-solid);
@@ -583,7 +583,7 @@ body.sidebar-open .sidebar {
 .point2d-sliders {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
 }
 
 .point2d-row {
@@ -593,7 +593,7 @@ body.sidebar-open .sidebar {
 }
 
 .point2d-label {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     font-weight: 700;
     color: var(--text-muted);
     width: 14px;
@@ -603,8 +603,8 @@ body.sidebar-open .sidebar {
     -webkit-appearance: none;
     appearance: none;
     flex: 1;
-    height: 8px;
-    border-radius: 4px;
+    height: 6px;
+    border-radius: 3px;
     background: rgba(255, 255, 255, 0.08);
     outline: none;
     cursor: pointer;
@@ -613,8 +613,8 @@ body.sidebar-open .sidebar {
 .point2d-slider::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
-    width: 16px;
-    height: 16px;
+    width: 14px;
+    height: 14px;
     border-radius: 50%;
     background: var(--accent-purple);
     border: 1.5px solid var(--bg-panel-solid);
@@ -623,8 +623,8 @@ body.sidebar-open .sidebar {
 }
 
 .point2d-slider::-moz-range-thumb {
-    width: 16px;
-    height: 16px;
+    width: 14px;
+    height: 14px;
     border-radius: 50%;
     background: var(--accent-purple);
     border: 1.5px solid var(--bg-panel-solid);
@@ -632,10 +632,10 @@ body.sidebar-open .sidebar {
 }
 
 .point2d-value {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     font-family: 'SF Mono', ui-monospace, monospace;
     color: var(--accent-purple);
-    width: 42px;
+    width: 40px;
     text-align: right;
 }
 
