@@ -179,13 +179,18 @@ function createFloatControl(input) {
 
 function computeStep(min, max) {
     const range = (max || 1) - (min || 0);
-    if (range <= 1) return 0.001;
+    if (range <= 0.01) return range / 500;
+    if (range <= 1) return range / 500;
     if (range <= 10) return 0.01;
     return 0.1;
 }
 
 function formatNum(n) {
-    return Number(n).toFixed(2);
+    const num = Number(n);
+    if (Math.abs(num) < 0.01 && num !== 0) {
+        return num.toExponential(2);
+    }
+    return Number(num.toFixed(4)).toString(); // Crops trailing zeros while preserving up to 4 decimals
 }
 
 // ============================================================
