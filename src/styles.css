@@ -25,9 +25,9 @@
     --text-secondary: #94a3b8;
     --text-muted: #64748b;
     --accent-teal: #2dd4bf;
-    --accent-blue: #3b82f6;
+    --accent-blue: #43a6fd;
     --accent-purple: #a78bfa;
-    --accent-gradient: linear-gradient(135deg, #2dd4bf, #3b82f6);
+    --accent-gradient: linear-gradient(135deg, #2dd4bf, #43a6fd);
     --danger: #ef4444;
     --success: #22c55e;
     /* Sizing */
@@ -100,27 +100,31 @@ html {
     height: var(--toggle-size);
     border: 1px solid var(--border-subtle);
     border-radius: var(--radius-md);
-    background: var(--bg-panel);
+    background: var(--bg-control);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
-    color: var(--text-primary);
+    color: #ffffff;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     transition: all 0.2s ease;
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
 }
 
 .sidebar-toggle:hover {
-    background: var(--bg-control-hover);
-    border-color: var(--border-glow);
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4), 0 0 0 1px var(--border-glow);
-    transform: scale(1.05);
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
 }
 
 .sidebar-toggle:active {
     transform: scale(0.95);
+}
+
+.isf-playground-root.sidebar-open .sidebar-toggle,
+.isf-playground-root.sidebar-open .sidebar-toggle:hover {
+    box-shadow: none;
 }
 
 /* Hamburger line animations */
@@ -835,16 +839,28 @@ html {
     color: var(--success);
 }
 
+.btn-primary {
+    background: rgba(45, 212, 191, 0.08);
+    border-color: rgba(45, 212, 191, 0.2);
+    color: var(--accent-teal);
+}
+
+.btn-primary:hover {
+    background: rgba(45, 212, 191, 0.15);
+    border-color: rgba(45, 212, 191, 0.35);
+    color: #5eead4;
+}
+
 .btn-secondary {
-    background: rgba(59, 130, 246, 0.08);
-    border-color: rgba(59, 130, 246, 0.2);
+    background: rgba(67, 166, 253, 0.08);
+    border-color: rgba(67, 166, 253, 0.2);
     color: var(--accent-blue);
 }
 
 .btn-secondary:hover {
-    background: rgba(59, 130, 246, 0.15);
-    border-color: rgba(59, 130, 246, 0.35);
-    color: #93bbfd;
+    background: rgba(67, 166, 253, 0.15);
+    border-color: rgba(67, 166, 253, 0.35);
+    color: #8ecbff;
 }
 
 /* ============================================================
