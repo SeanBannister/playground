@@ -61,6 +61,12 @@ export function createPlaygroundDOM() {
             <div class="sidebar-description" id="shader-description"></div>
 
             <div class="sidebar-body" id="controls-container"></div>
+
+            <div class="sidebar-footer-actions" id="sidebar-footer-actions">
+                <button id="btn-copy-inputs" class="btn-action btn-secondary" title="Copy input values">Copy</button>
+                <button id="btn-paste-inputs" class="btn-action btn-primary" title="Paste input values">Paste</button>
+                <button id="btn-reset-inputs" class="btn-action btn-danger" title="Reset to defaults">Reset</button>
+            </div>
         </aside>
 
         <div id="canvas-container">

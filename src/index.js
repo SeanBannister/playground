@@ -18,13 +18,20 @@ export function isfPlayground(shaderCode, container = document.body) {
         const cssUrl = new URL('./styles.css', import.meta.url).href;
         
         // Wait for CSS to load before showing UI
-        link.onload = () => { root.style.opacity = '1'; };
+        link.onload = () => { 
+            root.style.opacity = '1'; 
+            // Enable transitions after a short delay to ensure initial state is rendered without animation
+            setTimeout(() => root.classList.add('ready'), 100);
+        };
         
         link.href = cssUrl;
         document.head.appendChild(link);
     } else {
         // Show immediately if styles are already loaded
-        setTimeout(() => { root.style.opacity = '1'; }, 10);
+        setTimeout(() => { 
+            root.style.opacity = '1'; 
+            setTimeout(() => root.classList.add('ready'), 100);
+        }, 10);
     }
 
     // 3. Mount HTML
@@ -52,22 +59,79 @@ export function isfPlayground(shaderCode, container = document.body) {
 
     const renderer = new Renderer(gl);
 
+    // State to track input changes
+    let originalDefaults = {};
+    let currentInputValues = {};
+    let isInitialLoad = true;
+
+    function areValuesEqual(val1, val2) {
+        if (Array.isArray(val1) && Array.isArray(val2)) {
+            if (val1.length !== val2.length) return false;
+            for (let i = 0; i < val1.length; i++) {
+                if (val1[i] !== val2[i]) return false;
+            }
+            return true;
+        }
+        return val1 === val2;
+    }
+
+    function checkIfValuesChanged() {
+        let hasChanged = false;
+        for (const key in originalDefaults) {
+            if (!areValuesEqual(originalDefaults[key], currentInputValues[key])) {
+                hasChanged = true;
+                break;
+            }
+        }
+        const footer = root.querySelector('#sidebar-footer-actions');
+        if (footer) {
+            footer.classList.toggle('visible', hasChanged);
+        }
+    }
+
+    // Proxy setValue to track changes and show buttons
+    const originalSetValue = renderer.setValue.bind(renderer);
+    renderer.setValue = (name, value) => {
+        originalSetValue(name, value);
+        currentInputValues[name] = Array.isArray(value) ? [...value] : value;
+        
+        if (!isInitialLoad) {
+            checkIfValuesChanged();
+        }
+    };
+
     // Initial Load
     function loadShader(code) {
         currentFsSource = code;
         try {
+            isInitialLoad = true;
             renderer.loadSource(currentFsSource);
             
             if (!renderer.valid || renderer.error) {
                 throw new Error(renderer.error || 'Shader compilation failed with no specific error message.');
             }
 
+            originalDefaults = {};
+            currentInputValues = {};
+            if (renderer.model && renderer.model.inputs) {
+                renderer.model.inputs.forEach(input => {
+                    const defaultVal = input.DEFAULT !== undefined ? (Array.isArray(input.DEFAULT) ? [...input.DEFAULT] : input.DEFAULT) : 0;
+                    originalDefaults[input.NAME] = Array.isArray(defaultVal) ? [...defaultVal] : defaultVal;
+                    currentInputValues[input.NAME] = Array.isArray(defaultVal) ? [...defaultVal] : defaultVal;
+                });
+            }
+
+            const footer = root.querySelector('#sidebar-footer-actions');
+            if (footer) footer.classList.remove('visible');
+
             errorOverlay.style.display = 'none';
             buildControls(renderer.model, controlsContainer, shaderDescription, renderer);
+            isInitialLoad = false;
         } catch (err) {
             errorOverlay.textContent = err.message || err;
             errorOverlay.style.display = 'block';
             console.error("ISF Shader Error:", err.message || err);
+            isInitialLoad = false;
         }
     }
     
@@ -78,6 +142,17 @@ export function isfPlayground(shaderCode, container = document.body) {
     // UI Events
     sidebarToggle.addEventListener('click', () => {
         root.classList.toggle('sidebar-open');
+    });
+
+    // Close sidebar when clicking outside
+    window.addEventListener('mousedown', (e) => {
+        const sidebar = root.querySelector('#sidebar');
+        const isToggle = sidebarToggle.contains(e.target);
+        const isSidebar = sidebar.contains(e.target);
+        
+        if (root.classList.contains('sidebar-open') && !isToggle && !isSidebar) {
+            root.classList.remove('sidebar-open');
+        }
     });
 
     // File Loading Events
@@ -113,6 +188,78 @@ export function isfPlayground(shaderCode, container = document.body) {
             errorOverlay.textContent = 'Unable to paste. Make sure clipboard permissions are granted.';
             errorOverlay.style.display = 'block';
         }
+    });
+
+    // Input actions Events
+    root.querySelector('#btn-copy-inputs').addEventListener('click', (e) => {
+        if (!renderer.model || !renderer.model.inputs) return;
+        
+        // Format as ISF INPUTS array for easy reuse
+        const isfInputs = renderer.model.inputs.map(input => {
+            const inputCopy = { ...input };
+            inputCopy.DEFAULT = currentInputValues[input.NAME];
+            return inputCopy;
+        });
+
+        navigator.clipboard.writeText(JSON.stringify(isfInputs, null, 2)).then(() => {
+            flashButton(e.currentTarget, 'Copied!');
+        }).catch(() => {
+            flashButton(e.currentTarget, 'Error!');
+        });
+    });
+
+    root.querySelector('#btn-paste-inputs').addEventListener('click', async (e) => {
+        try {
+            const text = await navigator.clipboard.readText();
+            let pastedData = JSON.parse(text);
+            if (!renderer.model || !renderer.model.inputs) return;
+            
+            // Handle both plain object and ISF INPUTS array format
+            const getValue = (name) => {
+                if (Array.isArray(pastedData)) {
+                    const found = pastedData.find(item => item.NAME === name);
+                    return found ? found.DEFAULT : undefined;
+                }
+                return pastedData[name];
+            };
+
+            isInitialLoad = true;
+            renderer.model.inputs.forEach(input => {
+                const newVal = getValue(input.NAME);
+                if (newVal !== undefined) {
+                    const val = Array.isArray(newVal) ? [...newVal] : newVal;
+                    input.DEFAULT = val;
+                    renderer.setValue(input.NAME, val);
+                    currentInputValues[input.NAME] = val;
+                }
+            });
+            buildControls(renderer.model, controlsContainer, shaderDescription, renderer);
+            isInitialLoad = false;
+            
+            checkIfValuesChanged();
+            
+            flashButton(e.currentTarget, 'Pasted!');
+        } catch (err) {
+            console.error('Failed to paste inputs:', err);
+            flashButton(e.currentTarget, 'Error!');
+        }
+    });
+
+    root.querySelector('#btn-reset-inputs').addEventListener('click', () => {
+        if (!renderer.model || !renderer.model.inputs) return;
+        
+        isInitialLoad = true;
+        renderer.model.inputs.forEach(input => {
+            if (originalDefaults[input.NAME] !== undefined) {
+                const val = Array.isArray(originalDefaults[input.NAME]) ? [...originalDefaults[input.NAME]] : originalDefaults[input.NAME];
+                input.DEFAULT = val;
+                renderer.setValue(input.NAME, val);
+            }
+        });
+        buildControls(renderer.model, controlsContainer, shaderDescription, renderer);
+        isInitialLoad = false;
+
+        checkIfValuesChanged();
     });
 
     // Render loop and resizing

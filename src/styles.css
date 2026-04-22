@@ -165,9 +165,13 @@ html {
     display: flex;
     flex-direction: column;
     transform: translateX(-100%);
-    transition: transform var(--transition-sidebar);
     box-shadow: 4px 0 40px rgba(0, 0, 0, 0.4);
     overflow: hidden;
+}
+
+/* Only transition after the playground is ready to avoid slide-out on load */
+.isf-playground-root.ready .sidebar {
+    transition: transform var(--transition-sidebar);
 }
 
 .isf-playground-root.sidebar-open .sidebar {
@@ -257,6 +261,47 @@ html {
 .sidebar-body::-webkit-scrollbar-thumb {
     background: rgba(255, 255, 255, 0.1);
     border-radius: 4px;
+}
+
+/* ============================================================
+   Sidebar Footer Actions
+   ============================================================ */
+
+.sidebar-footer-actions {
+    display: flex;
+    gap: 8px;
+    padding: 12px 24px;
+    background: var(--bg-panel);
+    border-top: 1px solid transparent;
+    flex-shrink: 0;
+    align-items: center;
+
+    /* Animation state: hidden by default */
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    opacity: 0;
+    transform: translateY(20px);
+    overflow: hidden;
+    transition: 
+        max-height 0.8s var(--ease-out-expo), 
+        padding 0.8s var(--ease-out-expo), 
+        opacity 0.8s ease, 
+        transform 0.8s var(--ease-out-expo),
+        border-color 0.8s var(--ease-out-expo);
+}
+
+.sidebar-footer-actions.visible {
+    max-height: 100px;
+    padding-top: 12px;
+    padding-bottom: 12px;
+    opacity: 1;
+    transform: translateY(0);
+    border-top-color: var(--border-subtle);
+}
+
+.sidebar-footer-actions button {
+    flex: 1;
 }
 
 /* ============================================================
@@ -874,6 +919,18 @@ html {
     background: rgba(67, 166, 253, 0.15);
     border-color: rgba(67, 166, 253, 0.35);
     color: #8ecbff;
+}
+
+.btn-danger {
+    background: rgba(239, 68, 68, 0.08);
+    border-color: rgba(239, 68, 68, 0.2);
+    color: var(--danger);
+}
+
+.btn-danger:hover {
+    background: rgba(239, 68, 68, 0.15);
+    border-color: rgba(239, 68, 68, 0.35);
+    color: #f87171;
 }
 
 /* ============================================================
