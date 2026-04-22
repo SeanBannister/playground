@@ -14,7 +14,7 @@ export function createPlaygroundDOM() {
 
         <aside id="sidebar" class="sidebar">
             <div class="sidebar-header">
-                <h1 class="sidebar-title">✨ ISF Playground</h1>
+                <h1 class="sidebar-title">ISF Playground</h1>
                 <span id="fps-counter" class="fps-badge">60 FPS</span>
             </div>
 
@@ -108,10 +108,29 @@ function createFloatControl(input, renderer) {
     labelEl.className = 'control-label';
     labelEl.textContent = input.LABEL || input.NAME;
 
-    const valueEl = document.createElement('span');
+    const valueEl = document.createElement('input');
+    valueEl.type = 'number';
     valueEl.className = 'control-value';
     const defaultVal = input.DEFAULT !== undefined ? input.DEFAULT : (input.MIN || 0);
-    valueEl.textContent = formatNum(defaultVal);
+    valueEl.value = formatNum(defaultVal);
+    if (input.MIN !== undefined) valueEl.min = input.MIN;
+    if (input.MAX !== undefined) valueEl.max = input.MAX;
+    valueEl.step = 'any';
+
+    const clampValue = (val) => {
+        let n = parseFloat(val);
+        if (isNaN(n)) n = defaultVal;
+        if (input.MIN !== undefined && n < input.MIN) n = input.MIN;
+        if (input.MAX !== undefined && n > input.MAX) n = input.MAX;
+        return n;
+    };
+
+    valueEl.addEventListener('change', () => {
+        let v = clampValue(valueEl.value);
+        valueEl.value = formatNum(v);
+        slider.value = v;
+        renderer.setValue(input.NAME, v);
+    });
 
     labelRow.appendChild(labelEl);
     labelRow.appendChild(valueEl);
@@ -127,7 +146,7 @@ function createFloatControl(input, renderer) {
 
     slider.addEventListener('input', () => {
         const v = parseFloat(slider.value);
-        valueEl.textContent = formatNum(v);
+        valueEl.value = formatNum(v);
         renderer.setValue(input.NAME, v);
     });
 
@@ -340,13 +359,36 @@ function createPoint2DControl(input, renderer) {
         axisSlider.step = 0.01;
         axisSlider.value = pt[idx];
 
-        const axisValue = document.createElement('span');
+        let minVal = Array.isArray(min) ? min[idx] : min;
+        let maxVal = Array.isArray(max) ? max[idx] : max;
+
+        const axisValue = document.createElement('input');
+        axisValue.type = 'number';
         axisValue.className = 'point2d-value';
-        axisValue.textContent = formatNum(pt[idx]);
+        axisValue.value = formatNum(pt[idx]);
+        if (minVal !== undefined) axisValue.min = minVal;
+        if (maxVal !== undefined) axisValue.max = maxVal;
+        axisValue.step = 'any';
+
+        const clampPointValue = (val) => {
+            let n = parseFloat(val);
+            if (isNaN(n)) n = pt[idx];
+            if (minVal !== undefined && n < minVal) n = minVal;
+            if (maxVal !== undefined && n > maxVal) n = maxVal;
+            return n;
+        };
+
+        axisValue.addEventListener('change', () => {
+            let v = clampPointValue(axisValue.value);
+            axisValue.value = formatNum(v);
+            axisSlider.value = v;
+            pt[idx] = v;
+            renderer.setValue(input.NAME, [...pt]);
+        });
 
         axisSlider.addEventListener('input', () => {
             pt[idx] = parseFloat(axisSlider.value);
-            axisValue.textContent = formatNum(pt[idx]);
+            axisValue.value = formatNum(pt[idx]);
             renderer.setValue(input.NAME, [...pt]);
         });
 

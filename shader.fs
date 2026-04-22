@@ -1,122 +1,179 @@
 /*{
-    "CREDIT": "20Block Radius",
-    "DESCRIPTION": "Dual interacting melt fields with independent size control",
-    "CATEGORIES": [ "generator" ],
+    "DESCRIPTION": "Aurora Flow - generative organic field with recursive domain warping, triple palette and radial pulse. Inspired by northern lights patterns and ink flows.",
+    "CREDIT": "ISF video generator",
+    "ISFVSN": "2",
+    "CATEGORIES": ["GENERATOR", "NOISE", "ORGANIC"],
     "INPUTS": [
-        { "NAME": "noiseIntensity", "TYPE": "float", "DEFAULT": 6.0, "MIN": 0.0, "MAX": 10.0 },
-        { "NAME": "noiseScaleX", "TYPE": "float", "DEFAULT": 5.5, "MIN": 0.1, "MAX": 10.0 },
-        { "NAME": "noiseScaleY", "TYPE": "float", "DEFAULT": 3.5, "MIN": 0.1, "MAX": 10.0 },
-        { "NAME": "wavePhase", "TYPE": "float", "DEFAULT": 0.2, "MIN": 0.0, "MAX": 1.0 },
-        { "NAME": "rotationAmount", "TYPE": "float", "DEFAULT": 0.0, "MIN": -3.14, "MAX": 3.14 },
-        { "NAME": "colorTint", "TYPE": "color", "DEFAULT": [1,1,1,1] },
-        { "NAME": "deformAmount", "TYPE": "float", "DEFAULT": 0.2, "MIN": 0.0, "MAX": 2.0 },
-
-        { "NAME": "center",  "TYPE": "point2D", "DEFAULT": [0.5,0.5], "MIN":[0,0], "MAX":[1,1] },
-        { "NAME": "center2", "TYPE": "point2D", "DEFAULT": [0.65,0.65], "MIN":[0,0], "MAX":[1,1] },
-
-        { "NAME": "size1", "TYPE": "float", "DEFAULT": 0.5, "MIN": 0.05, "MAX": 1.5 },
-        { "NAME": "size2", "TYPE": "float", "DEFAULT": 0.5, "MIN": 0.05, "MAX": 1.5 },
-
-        { "NAME": "interactionStrength", "TYPE": "float", "DEFAULT": 1.0, "MIN": 0.0, "MAX": 3.0 }
+        {
+            "NAME": "scale",
+            "LABEL": "Scale",
+            "TYPE": "float",
+            "DEFAULT": 2.8,
+            "MIN": 0.5,
+            "MAX": 10.0
+        },
+        {
+            "NAME": "speed",
+            "LABEL": "Speed",
+            "TYPE": "float",
+            "DEFAULT": 0.25,
+            "MIN": 0.0,
+            "MAX": 2.0
+        },
+        {
+            "NAME": "warpAmount",
+            "LABEL": "Warp Amount",
+            "TYPE": "float",
+            "DEFAULT": 1.6,
+            "MIN": 0.0,
+            "MAX": 4.0
+        },
+        {
+            "NAME": "rotation",
+            "LABEL": "Rotation",
+            "TYPE": "float",
+            "DEFAULT": 0.15,
+            "MIN": -1.0,
+            "MAX": 1.0
+        },
+        {
+            "NAME": "pulse",
+            "LABEL": "Pulse",
+            "TYPE": "float",
+            "DEFAULT": 0.4,
+            "MIN": 0.0,
+            "MAX": 1.5
+        },
+        {
+            "NAME": "colorA",
+            "LABEL": "Deep Color",
+            "TYPE": "color",
+            "DEFAULT": [0.05, 0.02, 0.25, 1.0]
+        },
+        {
+            "NAME": "colorB",
+            "LABEL": "Mid Color",
+            "TYPE": "color",
+            "DEFAULT": [0.85, 0.20, 0.55, 1.0]
+        },
+        {
+            "NAME": "colorC",
+            "LABEL": "Glow Color",
+            "TYPE": "color",
+            "DEFAULT": [1.0, 0.90, 0.45, 1.0]
+        },
+        {
+            "NAME": "intensity",
+            "LABEL": "Intensity",
+            "TYPE": "float",
+            "DEFAULT": 1.0,
+            "MIN": 0.1,
+            "MAX": 2.5
+        },
+        {
+            "NAME": "vignette",
+            "LABEL": "Vignette",
+            "TYPE": "float",
+            "DEFAULT": 0.6,
+            "MIN": 0.0,
+            "MAX": 1.5
+        }
     ]
 }*/
 
-#define PI 3.1415926535
-#define TWO_PI (PI * 2.0)
+// =========================================================
+// Aurora Flow - ISF generative shader
+// Technique: Recursive Domain Warping (Inigo Quilez)
+// Layer 1: base fbm
+// Layer 2: space distortion by layer 1 fbm
+// Layer 3: distortion again by layer 2 -> final texture
+// =========================================================
 
-float map(float x, float a, float b, float c, float d){
-    return (x-a)*(d-c)/(b-a)+c;
+// --- Deterministic 2D Hash ---
+float hash(vec2 p) {
+    p = fract(p * vec2(123.34, 456.21));
+    p += dot(p, p + 45.32);
+    return fract(p.x * p.y);
 }
 
-float ease(float p, float g){
-    return (p < 0.5) ? 0.5*pow(2.0*p,g) : 1.0 - 0.5*pow(2.0*(1.0-p),g);
+// --- Smoothed value noise ---
+float vnoise(vec2 p) {
+    vec2 i = floor(p);
+    vec2 f = fract(p);
+    // Quintic Hermite curve (Perlin) for smooth gradient
+    vec2 u = f * f * f * (f * (f * 6.0 - 15.0) + 10.0);
+    float a = hash(i + vec2(0.0, 0.0));
+    float b = hash(i + vec2(1.0, 0.0));
+    float c = hash(i + vec2(0.0, 1.0));
+    float d = hash(i + vec2(1.0, 1.0));
+    return mix(mix(a, b, u.x), mix(c, d, u.x), u.y);
 }
 
-float hash(vec2 p){
-    vec3 p3 = fract(vec3(p.xyx)*0.13);
-    p3 += dot(p3,p3.yzx+3.333);
-    return fract((p3.x+p3.y)*p3.z);
-}
-
-float noise(vec2 x){
-    vec2 i=floor(x), f=fract(x);
-    float a=hash(i), b=hash(i+vec2(1,0));
-    float c=hash(i+vec2(0,1)), d=hash(i+vec2(1,1));
-    vec2 u=f*f*(3.0-2.0*f);
-    return mix(a,b,u.x)+(c-a)*u.y*(1.0-u.x)+(d-b)*u.x*u.y;
-}
-
-float fbm(vec2 x){
-    float v=0.0, a=0.5;
-    mat2 rot=mat2(cos(0.5),sin(0.5),-sin(0.5),cos(0.5));
-    for(int i=0;i<3;i++){
-        v+=a*noise(x);
-        x=rot*x*2.0+100.0;
-        a*=0.5;
+// --- Fractal Brownian Motion (5 octaves) ---
+float fbm(vec2 p) {
+    float v = 0.0;
+    float a = 0.5;
+    mat2 rot = mat2(0.8, -0.6, 0.6, 0.8); // rotation per octave (directional anti-aliasing)
+    for (int i = 0; i < 5; i++) {
+        v += a * vnoise(p);
+        p = rot * p * 2.02 + vec2(13.37, 7.13);
+        a *= 0.5;
     }
     return v;
 }
 
-float distC(vec2 uv, vec2 c){
-    vec2 p=uv-c;
-    p.x*=RENDERSIZE.x/RENDERSIZE.y;
-    return length(p);
+// --- 2D rotation matrix ---
+mat2 rot2D(float a) {
+    float c = cos(a), s = sin(a);
+    return mat2(c, -s, s, c);
 }
 
-vec2 rotateUV(vec2 uv, float a, vec2 c){
-    uv-=c;
-    uv=mat2(cos(a),-sin(a),sin(a),cos(a))*uv;
-    uv+=c;
-    return uv;
-}
+void main() {
+    // Normalized coordinates with aspect correction
+    vec2 uv = isf_FragNormCoord;
+    vec2 p  = (uv - 0.5) * vec2(RENDERSIZE.x / RENDERSIZE.y, 1.0);
 
-// --- SIZE-AWARE INTERACTION ---
-float interactingWave(vec2 uv, float t){
+    // Scaled time
+    float t = TIME * speed;
 
-    float d1 = distC(uv, center) / size1;
-    float d2 = distC(uv, center2) / size2;
+    // Slow global rotation for flow sensation
+    p = rot2D(TIME * rotation * 0.3) * p;
+    p *= scale;
 
-    vec2 ns = vec2(noiseScaleX, noiseScaleY);
-
-    float n1 = fbm(uv * ns + t*0.3);
-    float n2 = fbm((uv+5.0) * ns + t*0.35);
-
-    float offset1 = n1 * noiseIntensity * smoothstep(0.32,0.22,d1);
-    float offset2 = n2 * noiseIntensity * smoothstep(0.32,0.22,d2);
-
-    float wave1 = smoothstep(0.8,0.001,d1)*18.0;
-    float wave2 = smoothstep(0.8,0.001,d2)*18.0;
-
-    float combined = offset1 + offset2 + wave1 + wave2;
-
-    combined += interactionStrength * (offset1 * offset2);
-
-    float w = sin(TWO_PI * (t + combined + wavePhase));
-    return map(w,-1.0,1.0,0.0,1.0);
-}
-
-void main(){
-    vec2 uv = gl_FragCoord.xy / RENDERSIZE.xy;
-
-    uv += deformAmount * 0.02 * vec2(
-        sin(uv.y*10.0+TIME),
-        cos(uv.x*10.0+TIME)
+    // ---- Recursive Domain Warping ----
+    vec2 q = vec2(
+        fbm(p + vec2(0.0, 0.0) + vec2(t, -t * 0.7)),
+        fbm(p + vec2(5.2, 1.3) - vec2(t * 0.5, t * 0.9))
     );
 
-    vec2 mid = mix(center, center2, 0.5);
-    uv = rotateUV(uv, rotationAmount, mid);
+    vec2 r = vec2(
+        fbm(p + warpAmount * q + vec2(1.7, 9.2) + 0.15 * t),
+        fbm(p + warpAmount * q + vec2(8.3, 2.8) + 0.126 * t)
+    );
 
-    float r = interactingWave(uv, TIME);
-    float g = interactingWave(uv + 0.01, TIME);
-    float b = interactingWave(uv + 0.02, TIME);
+    float f = fbm(p + warpAmount * r);
 
-    vec3 col = vec3(r,g,b) * colorTint.rgb;
+    // ---- Radial pulsation ----
+    float dist = length(uv - 0.5);
+    float pulseWave = pulse * sin(TIME * 1.2 - dist * 6.2831);
+    f = clamp(f + pulseWave * 0.15, 0.0, 1.0);
 
-    float v1 = distC(uv, center) / size1;
-    float v2 = distC(uv, center2) / size2;
-    float v = min(v1, v2);
+    // ---- Triple palette mixing ----
+    vec3 col = mix(colorA.rgb, colorB.rgb, smoothstep(0.0, 0.85, f * 1.3));
+    col = mix(col, colorC.rgb, clamp(length(q) * 0.75, 0.0, 1.0));
+    col = mix(col, colorB.rgb * 1.15, clamp(r.x * r.y * 1.4, 0.0, 1.0));
 
-    float fade = 1.0 - min(ease(v+0.2, 20.0),1.0);
+    // Peak highlights (regenerative highlights)
+    float highlight = smoothstep(0.55, 0.95, f);
+    col += colorC.rgb * highlight * 0.35;
 
-    gl_FragColor = vec4(col * fade, 1.0);
+    // Intensity modulation
+    col *= intensity * (0.55 + 0.55 * f);
+
+    // ---- Smooth vignette ----
+    float vig = 1.0 - smoothstep(0.35, 0.95, dist) * vignette;
+    col *= vig;
+
+    // Final output
+    gl_FragColor = vec4(col, 1.0);
 }

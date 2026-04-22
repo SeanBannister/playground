@@ -127,31 +127,20 @@ html {
 .sidebar-toggle svg .hamburger-line {
     transition: all 0.35s var(--ease-out-expo);
     transform-origin: center;
-}
-
-.isf-playground-root.sidebar-open .sidebar-toggle {
-    left: calc(var(--sidebar-width) + 16px);
+    transform-box: fill-box;
 }
 
 .isf-playground-root.sidebar-open .sidebar-toggle .hamburger-line.top {
-    transform: translateX(3px) rotate(45deg);
-    x1: 6;
-    y1: 12;
-    x2: 18;
-    y2: 12;
+    transform: translateY(2.18px) rotate(-45deg) scaleX(0.6);
 }
 
 .isf-playground-root.sidebar-open .sidebar-toggle .hamburger-line.middle {
     opacity: 0;
-    transform: translateX(-8px);
+    transform: translateX(8px);
 }
 
 .isf-playground-root.sidebar-open .sidebar-toggle .hamburger-line.bottom {
-    transform: translateX(3px) rotate(-45deg);
-    x1: 6;
-    y1: 12;
-    x2: 18;
-    y2: 12;
+    transform: translateY(-2.18px) rotate(45deg) scaleX(0.6);
 }
 
 /* ============================================================
@@ -182,7 +171,8 @@ html {
 }
 
 .sidebar-header {
-    padding: 24px 24px 16px;
+    height: 76px;
+    padding: 0 24px 0 76px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -346,7 +336,22 @@ html {
     padding: 2px 8px;
     border-radius: var(--radius-sm);
     min-width: 46px;
+    width: 50px;
     text-align: center;
+    border: 1px solid transparent;
+    outline: none;
+    -moz-appearance: textfield;
+}
+
+.control-value::-webkit-outer-spin-button,
+.control-value::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.control-value:focus {
+    border-color: var(--accent-teal);
+    background: rgba(45, 212, 191, 0.15);
 }
 
 /* ============================================================
@@ -695,8 +700,25 @@ html {
     font-size: 0.7rem;
     font-family: 'SF Mono', ui-monospace, monospace;
     color: var(--accent-purple);
-    width: 40px;
-    text-align: right;
+    width: 48px;
+    text-align: center;
+    background: rgba(167, 139, 250, 0.08);
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    padding: 2px 4px;
+    outline: none;
+    -moz-appearance: textfield;
+}
+
+.point2d-value::-webkit-outer-spin-button,
+.point2d-value::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.point2d-value:focus {
+    border-color: var(--accent-purple);
+    background: rgba(167, 139, 250, 0.15);
 }
 
 /* ============================================================
