@@ -57,12 +57,17 @@ export function isfPlayground(shaderCode, container = document.body) {
         currentFsSource = code;
         try {
             renderer.loadSource(currentFsSource);
+            
+            if (!renderer.valid || renderer.error) {
+                throw new Error(renderer.error || 'Shader compilation failed with no specific error message.');
+            }
+
             errorOverlay.style.display = 'none';
             buildControls(renderer.model, controlsContainer, shaderDescription, renderer);
         } catch (err) {
             errorOverlay.textContent = err.message || err;
             errorOverlay.style.display = 'block';
-            console.error(err);
+            console.error("ISF Shader Error:", err.message || err);
         }
     }
     
@@ -123,7 +128,20 @@ export function isfPlayground(shaderCode, container = document.body) {
     function renderLoop() {
         resizeCanvas();
         if (renderer.valid) {
-            renderer.draw(canvas);
+            try {
+                renderer.draw(canvas);
+                
+                // If the drawing caused an error state without throwing
+                if (renderer.error) {
+                    throw new Error(renderer.error);
+                }
+            } catch (err) {
+                // If draw loop throws, catch it once to show on screen
+                renderer.valid = false;
+                errorOverlay.textContent = err.message || err;
+                errorOverlay.style.display = 'block';
+                console.error("ISF Render Error:", err.message || err);
+            }
         }
 
         frameCount++;
