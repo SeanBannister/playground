@@ -155,6 +155,32 @@ export function isfPlayground(shaderCode, container = document.body) {
         }
     });
 
+    // Sidebar Resizing
+    const sidebar = root.querySelector('#sidebar');
+    const resizer = root.querySelector('#sidebar-resizer');
+    let isResizing = false;
+
+    resizer.addEventListener('mousedown', (e) => {
+        isResizing = true;
+        root.classList.add('resizing');
+        document.addEventListener('mousemove', handleMouseMove);
+        document.addEventListener('mouseup', stopResizing);
+        e.preventDefault();
+    });
+
+    function handleMouseMove(e) {
+        if (!isResizing) return;
+        const newWidth = Math.min(Math.max(280, e.clientX), 800);
+        root.style.setProperty('--sidebar-width', `${newWidth}px`);
+    }
+
+    function stopResizing() {
+        isResizing = false;
+        root.classList.remove('resizing');
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', stopResizing);
+    }
+
     // File Loading Events
     const fileInput = root.querySelector('#file-input');
     const btnBrowse = root.querySelector('#btn-browse');

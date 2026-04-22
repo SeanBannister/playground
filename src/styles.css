@@ -170,12 +170,33 @@ html {
 }
 
 /* Only transition after the playground is ready to avoid slide-out on load */
-.isf-playground-root.ready .sidebar {
-    transition: transform var(--transition-sidebar);
+.isf-playground-root.ready:not(.resizing) .sidebar {
+    transition: transform var(--transition-sidebar), width 0.3s var(--ease-out-expo);
 }
 
 .isf-playground-root.sidebar-open .sidebar {
     transform: translateX(0);
+}
+
+.sidebar-resizer {
+    position: absolute;
+    top: 0;
+    right: -5px;
+    width: 8px;
+    height: 100%;
+    cursor: col-resize;
+    z-index: 1001;
+    transition: background 0.2s;
+}
+
+.sidebar-resizer:hover,
+.isf-playground-root.resizing .sidebar-resizer {
+    background: rgba(45, 212, 191, 0.3);
+}
+
+.isf-playground-root.resizing {
+    cursor: col-resize;
+    user-select: none;
 }
 
 .sidebar-header {
