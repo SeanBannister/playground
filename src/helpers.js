@@ -2,8 +2,16 @@
 // Helpers
 // ============================================================
 
-export function computeStep(min, max) {
-    const range = (max || 1) - (min || 0);
+export function computeStep(inputOrMin, max) {
+    let min, maxVal;
+    if (typeof inputOrMin === 'object' && inputOrMin !== null) {
+        min = inputOrMin.MIN;
+        maxVal = inputOrMin.MAX;
+    } else {
+        min = inputOrMin;
+        maxVal = max;
+    }
+    const range = (maxVal || 1) - (min || 0);
     if (range <= 0.01) return range / 500;
     if (range <= 1) return range / 500;
     if (range <= 10) return 0.01;
