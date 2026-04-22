@@ -28,11 +28,11 @@ export function createPlaygroundDOM() {
                     <div class="dropdown-menu">
                         <button id="btn-browse" class="dropdown-item" title="Load local .fs file">
                             <svg viewBox="0 0 20 20" width="14" height="14" fill="currentColor"><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zm8 3a1 1 0 00-1 1v2H7a1 1 0 000 2h2v2a1 1 0 002 0v-2h2a1 1 0 000-2h-2v-2a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
-                            Browse .fs
+                            <span>Browse .fs</span>
                         </button>
                         <button id="btn-paste" class="dropdown-item" title="Paste from clipboard">
                             <svg viewBox="0 0 20 20" width="14" height="14" fill="currentColor"><path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z"/><path d="M6 3a3 3 0 00-3 3v8a3 3 0 003 3h4a3 3 0 003-3V6a3 3 0 00-3-3H6z"/><path d="M14 7a1 1 0 00-1 1v6a1 1 0 001 0h.5A2.5 2.5 0 0017 11.5v-2A2.5 2.5 0 0014.5 7H14z"/></svg>
-                            Paste ISF
+                            <span>Paste ISF</span>
                         </button>
                     </div>
                 </div>
@@ -46,11 +46,11 @@ export function createPlaygroundDOM() {
                     <div class="dropdown-menu">
                         <button id="btn-export" class="dropdown-item">
                             <svg viewBox="0 0 20 20" width="14" height="14" fill="currentColor"><path d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"/></svg>
-                            Export .fs
+                            <span>Export .fs</span>
                         </button>
                         <button id="btn-copy" class="dropdown-item">
                             <svg viewBox="0 0 20 20" width="14" height="14" fill="currentColor"><path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z"/><path d="M6 3a3 3 0 00-3 3v8a3 3 0 003 3h4a3 3 0 003-3V6a3 3 0 00-3-3H6z"/><path d="M14 7a1 1 0 00-1 1v6a1 1 0 001 0h.5A2.5 2.5 0 0017 11.5v-2A2.5 2.5 0 0014.5 7H14z"/></svg>
-                            Copy ISF
+                            <span>Copy ISF</span>
                         </button>
                     </div>
                 </div>

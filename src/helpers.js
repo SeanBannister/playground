@@ -39,11 +39,22 @@ export function hexToRgba(hex) {
 }
 
 export function flashButton(btn, msg) {
-    const original = btn.innerHTML;
-    btn.textContent = msg;
-    btn.classList.add('success');
-    setTimeout(() => {
-        btn.innerHTML = original;
-        btn.classList.remove('success');
-    }, 2000);
+    const span = btn.querySelector('span');
+    if (span) {
+        const originalText = span.textContent;
+        span.textContent = msg;
+        btn.classList.add('success');
+        setTimeout(() => {
+            span.textContent = originalText;
+            btn.classList.remove('success');
+        }, 2000);
+    } else {
+        const original = btn.innerHTML;
+        btn.textContent = msg;
+        btn.classList.add('success');
+        setTimeout(() => {
+            btn.innerHTML = original;
+            btn.classList.remove('success');
+        }, 2000);
+    }
 }

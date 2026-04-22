@@ -90,7 +90,7 @@ export function isfPlayground(shaderCode, container = document.body) {
         const reader = new FileReader();
         reader.onload = (evt) => {
             loadShader(evt.target.result);
-            flashButton(btnBrowse, '✅ Loaded!');
+            flashButton(btnBrowse, 'Loaded!');
         };
         reader.readAsText(file);
         e.target.value = null; // Reset so same file can be selected again
@@ -101,7 +101,7 @@ export function isfPlayground(shaderCode, container = document.body) {
             const text = await navigator.clipboard.readText();
             if (text) {
                 loadShader(text);
-                flashButton(btnPaste, '✅ Pasted!');
+                flashButton(btnPaste, 'Pasted!');
             }
         } catch (err) {
             console.error("Failed to read clipboard:", err);
@@ -142,8 +142,9 @@ export function isfPlayground(shaderCode, container = document.body) {
 
     // Export Buttons Logic
     root.querySelector('#btn-copy').addEventListener('click', (e) => {
+        const btn = e.currentTarget;
         navigator.clipboard.writeText(currentFsSource).then(() => {
-            flashButton(e.currentTarget, '✅ Copied!');
+            flashButton(btn, 'Copied!');
         }).catch(() => {
             const textArea = document.createElement('textarea');
             textArea.value = currentFsSource;
@@ -155,7 +156,7 @@ export function isfPlayground(shaderCode, container = document.body) {
             textArea.select();
             try {
                 document.execCommand('copy');
-                flashButton(e.currentTarget, '✅ Copied!');
+                flashButton(btn, 'Copied!');
             } catch (err) {}
             document.body.removeChild(textArea);
         });
@@ -171,7 +172,7 @@ export function isfPlayground(shaderCode, container = document.body) {
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
-        flashButton(e.currentTarget, '✅ Exported!');
+        flashButton(e.currentTarget, 'Exported!');
     });
 
     // Return the instance api
