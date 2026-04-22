@@ -160,7 +160,7 @@ export function isfPlayground(shaderCode, container = document.body) {
     const resizer = root.querySelector('#sidebar-resizer');
     let isResizing = false;
 
-    resizer.addEventListener('mousedown', (e) => {
+    resizer?.addEventListener('mousedown', (e) => {
         isResizing = true;
         root.classList.add('resizing');
         document.addEventListener('mousemove', handleMouseMove);
