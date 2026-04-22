@@ -63,15 +63,32 @@ export function createPlaygroundDOM() {
             <div class="sidebar-body" id="controls-container"></div>
 
             <div class="sidebar-footer-actions" id="sidebar-footer-actions">
-                <button id="btn-copy-inputs" class="btn-action btn-secondary" title="Copy input values">Copy</button>
-                <button id="btn-paste-inputs" class="btn-action btn-primary" title="Paste input values">Paste</button>
-                <button id="btn-reset-inputs" class="btn-action btn-danger" title="Reset to defaults">Reset</button>
+                <button id="btn-copy-inputs" class="btn-action btn-secondary" title="Copy input values"><span>Copy</span></button>
+                <button id="btn-paste-inputs" class="btn-action btn-primary" title="Paste input values"><span>Paste</span></button>
+                <button id="btn-reset-inputs" class="btn-action btn-danger" title="Reset to defaults"><span>Reset</span></button>
             </div>
         </aside>
 
         <div id="canvas-container">
             <canvas id="glcanvas"></canvas>
             <div id="error-overlay"></div>
+        </div>
+
+        <div id="clipboard-modal" class="isf-modal-overlay" style="display: none;">
+            <div class="isf-modal">
+                <div class="isf-modal-header">
+                    <h2 id="modal-title">Clipboard Access</h2>
+                    <button id="modal-close-btn" class="modal-close-icon">&times;</button>
+                </div>
+                <div class="isf-modal-body">
+                    <p id="modal-message"></p>
+                    <textarea id="modal-textarea" readonly></textarea>
+                </div>
+                <div class="isf-modal-footer">
+                    <button id="modal-cancel" class="btn-action">Close</button>
+                    <button id="modal-apply" class="btn-action btn-primary" style="display: none;">Apply</button>
+                </div>
+            </div>
         </div>
     `;
     return root;
@@ -98,163 +115,145 @@ export function buildControls(model, controlsContainer, shaderDescription, rende
     for (const input of model.inputs) {
         const builder = builders[input.TYPE];
         if (builder) {
-            controlsContainer.appendChild(builder(input));
+            const row = document.createElement('div');
+            row.className = 'control-row';
+            row.appendChild(builder(input));
+            controlsContainer.appendChild(row);
         }
     }
 }
 
 function createFloatControl(input, renderer) {
-    const row = document.createElement('div');
-    row.className = 'control-row';
-
+    const container = document.createElement('div');
     const labelRow = document.createElement('div');
     labelRow.className = 'control-label-row';
 
-    const labelEl = document.createElement('span');
-    labelEl.className = 'control-label';
-    labelEl.textContent = input.LABEL || input.NAME;
+    const label = document.createElement('label');
+    label.className = 'control-label';
+    label.textContent = input.LABEL || input.NAME;
 
-    const valueEl = document.createElement('input');
-    valueEl.type = 'number';
-    valueEl.className = 'control-value';
-    const defaultVal = input.DEFAULT !== undefined ? input.DEFAULT : (input.MIN || 0);
-    valueEl.value = formatNum(defaultVal);
-    if (input.MIN !== undefined) valueEl.min = input.MIN;
-    if (input.MAX !== undefined) valueEl.max = input.MAX;
-    valueEl.step = 'any';
+    const valueInput = document.createElement('input');
+    valueInput.type = 'number';
+    valueInput.className = 'control-value';
+    valueInput.step = computeStep(input);
+    if (input.MIN !== undefined) valueInput.min = input.MIN;
+    if (input.MAX !== undefined) valueInput.max = input.MAX;
+    valueInput.value = formatNum(input.DEFAULT !== undefined ? input.DEFAULT : 0);
 
-    const clampValue = (val) => {
-        let n = parseFloat(val);
-        if (isNaN(n)) n = defaultVal;
-        if (input.MIN !== undefined && n < input.MIN) n = input.MIN;
-        if (input.MAX !== undefined && n > input.MAX) n = input.MAX;
-        return n;
-    };
-
-    valueEl.addEventListener('change', () => {
-        let v = clampValue(valueEl.value);
-        valueEl.value = formatNum(v);
-        slider.value = v;
-        renderer.setValue(input.NAME, v);
-    });
-
-    labelRow.appendChild(labelEl);
-    labelRow.appendChild(valueEl);
-    row.appendChild(labelRow);
+    labelRow.appendChild(label);
+    labelRow.appendChild(valueInput);
 
     const slider = document.createElement('input');
     slider.type = 'range';
     slider.className = 'range-slider';
+    slider.step = computeStep(input);
     slider.min = input.MIN !== undefined ? input.MIN : 0;
     slider.max = input.MAX !== undefined ? input.MAX : 1;
-    slider.step = computeStep(input.MIN, input.MAX);
-    slider.value = defaultVal;
+    slider.value = input.DEFAULT !== undefined ? input.DEFAULT : 0;
 
-    slider.addEventListener('input', () => {
-        const v = parseFloat(slider.value);
-        valueEl.value = formatNum(v);
-        renderer.setValue(input.NAME, v);
-    });
+    const update = (val) => {
+        const num = parseFloat(val);
+        renderer.setValue(input.NAME, num);
+        valueInput.value = formatNum(num);
+        slider.value = num;
+    };
 
-    row.appendChild(slider);
-    return row;
+    slider.addEventListener('input', (e) => update(e.target.value));
+    valueInput.addEventListener('input', (e) => update(e.target.value));
+
+    container.appendChild(labelRow);
+    container.appendChild(slider);
+    return container;
 }
 
 function createColorControl(input, renderer) {
-    const row = document.createElement('div');
-    row.className = 'control-row';
+    const container = document.createElement('div');
+    container.className = 'color-control';
 
-    const labelRow = document.createElement('div');
-    labelRow.className = 'control-label-row';
-    const labelEl = document.createElement('span');
-    labelEl.className = 'control-label';
-    labelEl.textContent = input.LABEL || input.NAME;
-    labelRow.appendChild(labelEl);
-    row.appendChild(labelRow);
+    const label = document.createElement('div');
+    label.className = 'control-label';
+    label.style.marginBottom = '10px';
+    label.textContent = input.LABEL || input.NAME;
+    container.appendChild(label);
 
-    const colorControl = document.createElement('div');
-    colorControl.className = 'color-control';
+    const content = document.createElement('div');
+    content.className = 'color-control';
+    content.style.gap = '14px';
 
-    const rgba = input.DEFAULT ? [...input.DEFAULT] : [1, 1, 1, 1];
     const swatchWrapper = document.createElement('div');
     swatchWrapper.className = 'color-swatch-wrapper';
 
     const swatch = document.createElement('div');
     swatch.className = 'color-swatch';
-    updateSwatchColor(swatch, rgba);
 
     const nativeInput = document.createElement('input');
     nativeInput.type = 'color';
     nativeInput.className = 'color-native-input';
-    nativeInput.value = rgbaToHex(rgba);
+
+    const initialColor = input.DEFAULT || [0, 0, 0, 1];
+    updateSwatchColor(swatch, initialColor);
+    nativeInput.value = rgbaToHex(initialColor);
 
     swatchWrapper.appendChild(swatch);
     swatchWrapper.appendChild(nativeInput);
-    colorControl.appendChild(swatchWrapper);
 
-    const slidersDiv = document.createElement('div');
-    slidersDiv.className = 'color-sliders';
+    const sliders = document.createElement('div');
+    sliders.className = 'color-sliders';
 
-    const channels = ['R', 'G', 'B', 'A'];
-    const channelSliders = [];
-
-    channels.forEach((ch, idx) => {
-        const chRow = document.createElement('div');
-        chRow.className = 'color-channel-row';
+    const channels = ['r', 'g', 'b', 'a'];
+    const colorSliders = channels.map((ch, i) => {
+        const row = document.createElement('div');
+        row.className = 'color-channel-row';
 
         const chLabel = document.createElement('span');
         chLabel.className = 'color-channel-label';
-        chLabel.textContent = ch;
+        chLabel.textContent = ch.toUpperCase();
 
         const chSlider = document.createElement('input');
         chSlider.type = 'range';
-        chSlider.className = `color-channel-slider ch-${ch.toLowerCase()}`;
+        chSlider.className = `color-channel-slider ch-${ch}`;
         chSlider.min = 0;
         chSlider.max = 1;
-        chSlider.step = 0.005;
-        chSlider.value = rgba[idx];
+        chSlider.step = 0.01;
+        chSlider.value = initialColor[i] !== undefined ? initialColor[i] : 1;
 
-        channelSliders.push(chSlider);
-
-        chSlider.addEventListener('input', () => {
-            rgba[idx] = parseFloat(chSlider.value);
-            updateSwatchColor(swatch, rgba);
-            nativeInput.value = rgbaToHex(rgba);
-            renderer.setValue(input.NAME, [...rgba]);
-        });
-
-        chRow.appendChild(chLabel);
-        chRow.appendChild(chSlider);
-        slidersDiv.appendChild(chRow);
+        row.appendChild(chLabel);
+        row.appendChild(chSlider);
+        return chSlider;
     });
 
-    nativeInput.addEventListener('input', () => {
-        const parsed = hexToRgba(nativeInput.value);
-        rgba[0] = parsed[0];
-        rgba[1] = parsed[1];
-        rgba[2] = parsed[2];
-        channelSliders[0].value = rgba[0];
-        channelSliders[1].value = rgba[1];
-        channelSliders[2].value = rgba[2];
+    const update = () => {
+        const rgba = colorSliders.map(s => parseFloat(s.value));
+        renderer.setValue(input.NAME, rgba);
         updateSwatchColor(swatch, rgba);
-        renderer.setValue(input.NAME, [...rgba]);
+        nativeInput.value = rgbaToHex(rgba);
+    };
+
+    colorSliders.forEach(s => s.addEventListener('input', update));
+    nativeInput.addEventListener('input', (e) => {
+        const rgba = hexToRgba(e.target.value);
+        colorSliders.forEach((s, i) => { if (i < 3) s.value = rgba[i]; });
+        update();
     });
 
-    colorControl.appendChild(slidersDiv);
-    row.appendChild(colorControl);
-    return row;
+    content.appendChild(swatchWrapper);
+    content.appendChild(sliders);
+    colorSliders.forEach(s => sliders.appendChild(s.parentElement));
+
+    container.appendChild(content);
+    return container;
 }
 
 function createBoolControl(input, renderer) {
-    const row = document.createElement('div');
-    row.className = 'control-row toggle-row';
+    const container = document.createElement('div');
+    container.className = 'toggle-row';
 
-    const labelEl = document.createElement('span');
-    labelEl.className = 'control-label';
-    labelEl.textContent = input.LABEL || input.NAME;
+    const label = document.createElement('label');
+    label.className = 'control-label';
+    label.textContent = input.LABEL || input.NAME;
 
-    const toggleSwitch = document.createElement('label');
-    toggleSwitch.className = 'toggle-switch';
+    const toggle = document.createElement('label');
+    toggle.className = 'toggle-switch';
 
     const checkbox = document.createElement('input');
     checkbox.type = 'checkbox';
@@ -263,147 +262,120 @@ function createBoolControl(input, renderer) {
     const track = document.createElement('span');
     track.className = 'toggle-track';
 
-    checkbox.addEventListener('change', () => {
-        renderer.setValue(input.NAME, checkbox.checked);
+    checkbox.addEventListener('change', (e) => {
+        renderer.setValue(input.NAME, e.target.checked);
     });
 
-    toggleSwitch.appendChild(checkbox);
-    toggleSwitch.appendChild(track);
-    row.appendChild(labelEl);
-    row.appendChild(toggleSwitch);
-    return row;
+    toggle.appendChild(checkbox);
+    toggle.appendChild(track);
+    container.appendChild(label);
+    container.appendChild(toggle);
+    return container;
 }
 
 function createEventControl(input, renderer) {
-    const row = document.createElement('div');
-    row.className = 'control-row';
-
     const btn = document.createElement('button');
     btn.className = 'event-btn';
+    btn.style.width = '100%';
     btn.textContent = input.LABEL || input.NAME;
 
-    btn.addEventListener('mousedown', () => {
-        renderer.setValue(input.NAME, true);
-    });
-    btn.addEventListener('mouseup', () => {
-        renderer.setValue(input.NAME, false);
-    });
-    btn.addEventListener('mouseleave', () => {
-        renderer.setValue(input.NAME, false);
-    });
-
-    row.appendChild(btn);
-    return row;
+    btn.addEventListener('mousedown', () => renderer.setValue(input.NAME, true));
+    btn.addEventListener('mouseup', () => renderer.setValue(input.NAME, false));
+    return btn;
 }
 
 function createLongControl(input, renderer) {
-    const row = document.createElement('div');
-    row.className = 'control-row';
+    const container = document.createElement('div');
 
-    const labelRow = document.createElement('div');
-    labelRow.className = 'control-label-row';
-    const labelEl = document.createElement('span');
-    labelEl.className = 'control-label';
-    labelEl.textContent = input.LABEL || input.NAME;
-    labelRow.appendChild(labelEl);
-    row.appendChild(labelRow);
+    const label = document.createElement('label');
+    label.className = 'control-label';
+    label.style.display = 'block';
+    label.style.marginBottom = '8px';
+    label.textContent = input.LABEL || input.NAME;
 
     const select = document.createElement('select');
     select.className = 'isf-select';
 
-    const values = input.VALUES || [];
-    const labels = input.LABELS || values.map(String);
+    if (input.VALUES && input.LABELS) {
+        input.VALUES.forEach((val, i) => {
+            const opt = document.createElement('option');
+            opt.value = val;
+            opt.textContent = input.LABELS[i];
+            if (val === input.DEFAULT) opt.selected = true;
+            select.appendChild(opt);
+        });
+    }
 
-    values.forEach((val, idx) => {
-        const opt = document.createElement('option');
-        opt.value = val;
-        opt.textContent = labels[idx] || val;
-        if (val === input.DEFAULT) opt.selected = true;
-        select.appendChild(opt);
+    select.addEventListener('change', (e) => {
+        renderer.setValue(input.NAME, parseInt(e.target.value));
     });
 
-    select.addEventListener('change', () => {
-        renderer.setValue(input.NAME, parseInt(select.value, 10));
-    });
-
-    row.appendChild(select);
-    return row;
+    container.appendChild(label);
+    container.appendChild(select);
+    return container;
 }
 
 function createPoint2DControl(input, renderer) {
-    const row = document.createElement('div');
-    row.className = 'control-row';
+    const container = document.createElement('div');
 
-    const labelRow = document.createElement('div');
-    labelRow.className = 'control-label-row';
-    const labelEl = document.createElement('span');
-    labelEl.className = 'control-label';
-    labelEl.textContent = input.LABEL || input.NAME;
-    labelRow.appendChild(labelEl);
-    row.appendChild(labelRow);
+    const label = document.createElement('label');
+    label.className = 'control-label';
+    label.style.display = 'block';
+    label.style.marginBottom = '10px';
+    label.textContent = input.LABEL || input.NAME;
+    container.appendChild(label);
 
-    const pt = input.DEFAULT ? [...input.DEFAULT] : [0, 0];
-    const min = input.MIN || [0, 0];
-    const max = input.MAX || [1, 1];
+    const sliders = document.createElement('div');
+    sliders.className = 'point2d-sliders';
 
-    const slidersDiv = document.createElement('div');
-    slidersDiv.className = 'point2d-sliders';
-
-    ['X', 'Y'].forEach((axis, idx) => {
-        const axisRow = document.createElement('div');
-        axisRow.className = 'point2d-row';
+    const currentPos = input.DEFAULT || [0, 0];
+    const axes = ['X', 'Y'];
+    const pointSliders = axes.map((axis, i) => {
+        const row = document.createElement('div');
+        row.className = 'point2d-row';
 
         const axisLabel = document.createElement('span');
         axisLabel.className = 'point2d-label';
         axisLabel.textContent = axis;
 
-        const axisSlider = document.createElement('input');
-        axisSlider.type = 'range';
-        axisSlider.className = 'point2d-slider';
-        axisSlider.min = Array.isArray(min) ? min[idx] : min;
-        axisSlider.max = Array.isArray(max) ? max[idx] : max;
-        axisSlider.step = 0.01;
-        axisSlider.value = pt[idx];
+        const slider = document.createElement('input');
+        slider.type = 'range';
+        slider.className = 'point2d-slider';
+        slider.min = 0;
+        slider.max = 1;
+        slider.step = 0.001;
+        slider.value = currentPos[i];
 
-        let minVal = Array.isArray(min) ? min[idx] : min;
-        let maxVal = Array.isArray(max) ? max[idx] : max;
+        const valueInput = document.createElement('input');
+        valueInput.type = 'number';
+        valueInput.className = 'point2d-value';
+        valueInput.step = 0.01;
+        valueInput.value = formatNum(currentPos[i]);
 
-        const axisValue = document.createElement('input');
-        axisValue.type = 'number';
-        axisValue.className = 'point2d-value';
-        axisValue.value = formatNum(pt[idx]);
-        if (minVal !== undefined) axisValue.min = minVal;
-        if (maxVal !== undefined) axisValue.max = maxVal;
-        axisValue.step = 'any';
+        row.appendChild(axisLabel);
+        row.appendChild(slider);
+        row.appendChild(valueInput);
+        sliders.appendChild(row);
 
-        const clampPointValue = (val) => {
-            let n = parseFloat(val);
-            if (isNaN(n)) n = pt[idx];
-            if (minVal !== undefined && n < minVal) n = minVal;
-            if (maxVal !== undefined && n > maxVal) n = maxVal;
-            return n;
-        };
-
-        axisValue.addEventListener('change', () => {
-            let v = clampPointValue(axisValue.value);
-            axisValue.value = formatNum(v);
-            axisSlider.value = v;
-            pt[idx] = v;
-            renderer.setValue(input.NAME, [...pt]);
-        });
-
-        axisSlider.addEventListener('input', () => {
-            pt[idx] = parseFloat(axisSlider.value);
-            axisValue.value = formatNum(pt[idx]);
-            renderer.setValue(input.NAME, [...pt]);
-        });
-
-        axisRow.appendChild(axisLabel);
-        axisRow.appendChild(axisSlider);
-        axisRow.appendChild(axisValue);
-        slidersDiv.appendChild(axisRow);
+        return { slider, valueInput };
     });
 
-    row.appendChild(slidersDiv);
-    return row;
+    const update = () => {
+        const pos = pointSliders.map(p => parseFloat(p.slider.value));
+        renderer.setValue(input.NAME, pos);
+        pointSliders.forEach((p, i) => {
+            p.valueInput.value = formatNum(pos[i]);
+        });
+    };
+
+    pointSliders.forEach(p => {
+        p.slider.addEventListener('input', update);
+        p.valueInput.addEventListener('input', (e) => {
+            p.slider.value = e.target.value;
+            update();
+        });
+    });
+
+    container.appendChild(sliders);
+    return container;
 }

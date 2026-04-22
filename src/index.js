@@ -160,6 +160,66 @@ export function isfPlayground(shaderCode, container = document.body) {
     const btnBrowse = root.querySelector('#btn-browse');
     const btnPaste = root.querySelector('#btn-paste');
 
+    const showClipboardModal = (title, message, content = '', onApply = null) => {
+        const modal = root.querySelector('#clipboard-modal');
+        const titleEl = modal.querySelector('#modal-title');
+        const messageEl = modal.querySelector('#modal-message');
+        const textarea = modal.querySelector('#modal-textarea');
+        const applyBtn = modal.querySelector('#modal-apply');
+        const cancelBtn = modal.querySelector('#modal-cancel');
+        const closeIcon = modal.querySelector('#modal-close-btn');
+
+        titleEl.textContent = title;
+        messageEl.textContent = message;
+        messageEl.style.color = 'var(--text-secondary)';
+        textarea.value = content;
+        textarea.readOnly = !onApply;
+        applyBtn.style.display = onApply ? 'block' : 'none';
+        
+        const closeModal = () => {
+            modal.style.display = 'none';
+            applyBtn.onclick = null;
+            cancelBtn.onclick = null;
+            closeIcon.onclick = null;
+            textarea.oncopy = null;
+            textarea.onpaste = null;
+        };
+
+        textarea.oncopy = () => {
+            if (!onApply) { // Only for copy mode
+                messageEl.textContent = 'Copied!';
+                messageEl.style.color = 'var(--success)';
+                setTimeout(closeModal, 800);
+            }
+        };
+
+        textarea.onpaste = (e) => {
+            if (onApply) { // Only for paste mode
+                messageEl.textContent = 'Pasted!';
+                messageEl.style.color = 'var(--success)';
+                // Short delay to let the paste hit the textarea
+                setTimeout(() => {
+                    onApply(textarea.value);
+                    closeModal();
+                }, 800);
+            }
+        };
+
+        applyBtn.onclick = () => {
+            if (onApply) onApply(textarea.value);
+            closeModal();
+        };
+        cancelBtn.onclick = closeModal;
+        closeIcon.onclick = closeModal;
+
+        modal.style.display = 'flex';
+        if (!onApply) {
+            textarea.select();
+        } else {
+            textarea.focus();
+        }
+    };
+
     btnBrowse.addEventListener('click', () => {
         fileInput.click();
     });
@@ -177,91 +237,129 @@ export function isfPlayground(shaderCode, container = document.body) {
     });
 
     btnPaste.addEventListener('click', async () => {
-        try {
-            const text = await navigator.clipboard.readText();
+        const pasteAction = (text) => {
             if (text) {
                 loadShader(text);
                 flashButton(btnPaste, 'Pasted!');
             }
+        };
+
+        try {
+            const text = await navigator.clipboard.readText();
+            pasteAction(text);
         } catch (err) {
-            console.error("Failed to read clipboard:", err);
-            errorOverlay.textContent = 'Unable to paste. Make sure clipboard permissions are granted.';
-            errorOverlay.style.display = 'block';
+            console.warn('Clipboard read failed, showing fallback modal:', err);
+            showClipboardModal(                'Paste ISF',
+                'We were unable to access your clipboard automatically. Please paste your ISF shader code into the area below using Ctrl+V (or Cmd+V) and click Apply.',
+                '',
+                pasteAction
+            );
         }
     });
 
     // Input actions Events
     root.querySelector('#btn-copy-inputs').addEventListener('click', (e) => {
+        const btn = e.currentTarget;
         if (!renderer.model || !renderer.model.inputs) return;
         
         // Format as ISF INPUTS array for easy reuse
+        // We only pick serializable properties to avoid issues with Clipboard API / JSON.stringify
         const isfInputs = renderer.model.inputs.map(input => {
-            const inputCopy = { ...input };
-            inputCopy.DEFAULT = currentInputValues[input.NAME];
-            return inputCopy;
-        });
-
-        navigator.clipboard.writeText(JSON.stringify(isfInputs, null, 2)).then(() => {
-            flashButton(e.currentTarget, 'Copied!');
-        }).catch(() => {
-            flashButton(e.currentTarget, 'Error!');
-        });
-    });
-
-    root.querySelector('#btn-paste-inputs').addEventListener('click', async (e) => {
-        try {
-            const text = await navigator.clipboard.readText();
-            let pastedData = JSON.parse(text);
-            if (!renderer.model || !renderer.model.inputs) return;
-            
-            // Handle both plain object and ISF INPUTS array format
-            const getValue = (name) => {
-                if (Array.isArray(pastedData)) {
-                    const found = pastedData.find(item => item.NAME === name);
-                    return found ? found.DEFAULT : undefined;
-                }
-                return pastedData[name];
-            };
-
-            isInitialLoad = true;
-            renderer.model.inputs.forEach(input => {
-                const newVal = getValue(input.NAME);
-                if (newVal !== undefined) {
-                    const val = Array.isArray(newVal) ? [...newVal] : newVal;
-                    input.DEFAULT = val;
-                    renderer.setValue(input.NAME, val);
-                    currentInputValues[input.NAME] = val;
-                }
+            const cleanInput = {};
+            ['NAME', 'TYPE', 'LABEL', 'MIN', 'MAX', 'STEP', 'VALUES', 'LABELS'].forEach(key => {
+                if (input[key] !== undefined) cleanInput[key] = input[key];
             });
-            buildControls(renderer.model, controlsContainer, shaderDescription, renderer);
-            isInitialLoad = false;
-            
-            checkIfValuesChanged();
-            
-            flashButton(e.currentTarget, 'Pasted!');
+            cleanInput.DEFAULT = currentInputValues[input.NAME];
+            return cleanInput;
+        });
+
+        try {
+            const content = JSON.stringify(isfInputs, null, 2);
+            navigator.clipboard.writeText(content).then(() => {
+                flashButton(btn, 'Copied!');
+            }).catch((err) => {
+                console.warn('Clipboard API failed, showing fallback modal:', err);
+                showClipboardModal(
+                    'Copy Inputs',
+                    'We were unable to access your clipboard automatically. Please copy the input values from the area below using Ctrl+C (or Cmd+C).',
+                    content
+                );
+            });
         } catch (err) {
-            console.error('Failed to paste inputs:', err);
-            flashButton(e.currentTarget, 'Error!');
+            console.error('Failed to stringify inputs:', err);
+            flashButton(btn, 'Error!');
         }
     });
 
-    root.querySelector('#btn-reset-inputs').addEventListener('click', () => {
+    root.querySelector('#btn-paste-inputs').addEventListener('click', async (e) => {
+        const btn = e.currentTarget;
+        const pasteInputsAction = (text) => {
+            try {
+                let pastedData = JSON.parse(text);
+                if (!renderer.model || !renderer.model.inputs) return;
+                
+                // Handle both plain object and ISF INPUTS array format
+                const getValue = (name) => {
+                    if (Array.isArray(pastedData)) {
+                        const found = pastedData.find(item => item.NAME === name);
+                        return found ? found.DEFAULT : undefined;
+                    }
+                    return pastedData[name];
+                };
+
+                isInitialLoad = true;
+                renderer.model.inputs.forEach(input => {
+                    const newVal = getValue(input.NAME);
+                    if (newVal !== undefined) {
+                        const val = Array.isArray(newVal) ? [...newVal] : newVal;
+                        input.DEFAULT = val;
+                        renderer.setValue(input.NAME, val);
+                        currentInputValues[input.NAME] = val;
+                    }
+                });
+                buildControls(renderer.model, controlsContainer, shaderDescription, renderer);
+                isInitialLoad = false;
+                
+                checkIfValuesChanged();
+                flashButton(btn, 'Pasted!');
+            } catch (err) {
+                console.error('Failed to parse pasted inputs:', err);
+                flashButton(btn, 'Error!');
+            }
+        };
+
+        try {
+            const text = await navigator.clipboard.readText();
+            pasteInputsAction(text);
+        } catch (err) {
+            console.warn('Clipboard read failed (inputs), showing fallback modal:', err);
+            showClipboardModal(
+                'Paste Inputs',
+                'We were unable to access your clipboard automatically. Please paste your input JSON into the area below using Ctrl+V (or Cmd+V) and click Apply.',
+                '',
+                pasteInputsAction
+            );
+        }
+    });
+
+    root.querySelector('#btn-reset-inputs').addEventListener('click', (e) => {
         if (!renderer.model || !renderer.model.inputs) return;
-        
+
         isInitialLoad = true;
         renderer.model.inputs.forEach(input => {
             if (originalDefaults[input.NAME] !== undefined) {
                 const val = Array.isArray(originalDefaults[input.NAME]) ? [...originalDefaults[input.NAME]] : originalDefaults[input.NAME];
                 input.DEFAULT = val;
                 renderer.setValue(input.NAME, val);
+                currentInputValues[input.NAME] = val;
             }
         });
         buildControls(renderer.model, controlsContainer, shaderDescription, renderer);
         isInitialLoad = false;
 
         checkIfValuesChanged();
+        flashButton(e.currentTarget, 'Reset!');
     });
-
     // Render loop and resizing
     function resizeCanvas() {
         const displayWidth = canvas.clientWidth;
@@ -311,23 +409,16 @@ export function isfPlayground(shaderCode, container = document.body) {
         navigator.clipboard.writeText(currentFsSource).then(() => {
             flashButton(btn, 'Copied!');
         }).catch(() => {
-            const textArea = document.createElement('textarea');
-            textArea.value = currentFsSource;
-            textArea.style.position = 'fixed';
-            textArea.style.top = '0';
-            textArea.style.left = '0';
-            document.body.appendChild(textArea);
-            textArea.focus();
-            textArea.select();
-            try {
-                document.execCommand('copy');
-                flashButton(btn, 'Copied!');
-            } catch (err) {}
-            document.body.removeChild(textArea);
+            showClipboardModal(
+                'Copy ISF',
+                'We were unable to access your clipboard automatically. Please copy the shader code from the area below using Ctrl+C (or Cmd+C).',
+                currentFsSource
+            );
         });
     });
 
     root.querySelector('#btn-export').addEventListener('click', (e) => {
+        const btn = e.currentTarget;
         const blob = new Blob([currentFsSource], { type: 'text/plain' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -337,7 +428,7 @@ export function isfPlayground(shaderCode, container = document.body) {
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
-        flashButton(e.currentTarget, 'Exported!');
+        flashButton(btn, 'Exported!');
     });
 
     // Return the instance api
